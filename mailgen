@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# MailGen — Gmail Alias Generator
+# Author: rkixz
+# https://github.com/blaxkmiradev/mailgen
+
+from itertools import product
+
+def get_dot_permutations(local: str) -> list[str]:
+    """Generate all dot-trick permutations for a Gmail local part."""
+    chars = list(local)
+    n = len(chars) - 1
+    permutations = []
+    for bits in product([False, True], repeat=n):
+        result = chars[0]
+        for i, add_dot in enumerate(bits):
+            if add_dot:
+                result += '.' + chars[i + 1]
+            else:
+                result += chars[i + 1]
+        permutations.append(result)
+    return permutations
+
+
+def parse_email(email: str):
+    """Split email into local and domain parts, strip existing dots and plus tags."""
+    email = email.strip().lower()
+    if '@' in email:
+        local, domain = email.split('@', 1)
+    else:
+        local, domain = email, 'gmail.com'
+    local = local.replace('.', '').split('+')[0]
+    return local, domain
+
+
+def generate_aliases(email: str, count: int) -> list[str]:
+    local, domain = parse_email(email)
+
+    if not local:
+        return []
+
+    all_variants = get_dot_permutations(local)
+    max_possible = len(all_variants)
+
+    aliases = []
+    for variant in all_variants:
+        if len(aliases) >= count:
+            break
+        aliases.append(f"{variant}@{domain}")
+
+    if len(aliases) < count:
+        print(f"\n  ⚠  Only {max_possible} dot-trick variants possible for this username.")
+        print(f"     Generated {len(aliases)} aliases (all unique dot permutations).")
+
+    return aliases
+
+
+def main():
+    print("=" * 52)
+    print("   MailGen — Gmail Alias Generator by rkixz")
+    print("=" * 52)
+    print()
+
+    while True:
+        email = input("  Enter your Gmail address: ").strip()
+        if not email:
+            print("  Email cannot be empty. Try again.\n")
+            continue
+        local, domain = parse_email(email)
+        if not local:
+            print("  Invalid email. Try again.\n")
+            continue
+        max_variants = 2 ** (len(local) - 1)
+        print(f"  → {len(local)}-character username · up to {max_variants} dot variants possible")
+        break
+
+    print()
+    while True:
+        try:
+            count = int(input("  How many aliases to generate? ").strip())
+            if count <= 0:
+                print("  Enter a number greater than 0.\n")
+                continue
+            break
+        except ValueError:
+            print("  Please enter a valid number.\n")
+
+    print()
+    print("  Generating aliases...", end="", flush=True)
+    aliases = generate_aliases(email, count)
+    print(f" done.\n")
+
+    print("-" * 52)
+    for i, alias in enumerate(aliases, 1):
+        print(f"  {i:>4}.  {alias}")
+    print("-" * 52)
+    print(f"  Total: {len(aliases)} alias(es) generated")
+    print()
+
+    while True:
+        save = input("  Save output to a .txt file? (y/n): ").strip().lower()
+        if save in ('y', 'yes'):
+            while True:
+                filename = input("  Enter filename (default: aliases.txt): ").strip()
+                if not filename:
+                    filename = "aliases.txt"
+                if not filename.endswith('.txt'):
+                    filename += '.txt'
+                break
+
+            try:
+                with open(filename, 'w') as f:
+                    f.write(f"Gmail Alias Generator — {email}\n")
+                    f.write("=" * 52 + "\n")
+                    for i, alias in enumerate(aliases, 1):
+                        f.write(f"{i:>4}. {alias}\n")
+                    f.write("=" * 52 + "\n")
+                    f.write(f"Total: {len(aliases)} alias(es)\n")
+                print(f"\n  ✓  Saved to '{filename}'")
+            except OSError as e:
+                print(f"\n  ✗  Could not save file: {e}")
+            break
+
+        elif save in ('n', 'no'):
+            print("  Output not saved.")
+            break
+        else:
+            print("  Please enter y or n.\n")
+
+    print()
+    print("=" * 52)
+    print("  Done! All emails above deliver to your inbox.")
+    print("=" * 52)
+    print()
+
+
+if __name__ == "__main__":
+    main()
