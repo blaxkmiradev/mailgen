@@ -184,7 +184,7 @@ MIT — do whatever you want with it.
 
 <div align="center">
 
-made with ♥ by **[rkixz](https://github.com/rkixz)**
+made with ♥ by **[rkixz](https://github.com/blaxkmiradev)**
 
 *if this helped you, drop a ⭐ — it means a lot*
 
